@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="{{ active_lang }}">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>{% block title %}{{ t("app.title") }}{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/app.css" />
+  <style id="font-vars">
+    :root {
+      --app-font-size: {{ font_size }}px;
+      --app-font-family: {{ font_family_css }};
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" aria-label="Sidebar">
+      <div class="brand">
+        <div class="brand__mark" aria-hidden="true">🦾</div>
+        <div class="brand__text">
+          <div class="brand__name">{{ t("app.title") }}</div>
+          <div class="brand__sub">{{ t("app.subtitle") }}</div>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <ul>
+          {% for item in menu %}
+            <li>
+              <a href="{{ item.url }}"
+                 class="nav__link {% if page_key == item.key %}nav__link--active{% endif %}"
+                 {% if page_key == item.key %}aria-current="page"{% endif %}>
+                <span class="nav__icon" aria-hidden="true">{{ item.icon }}</span>
+                <span class="nav__label">{{ t("menu." ~ item.key) }}</span>
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      </nav>
+
+      <div class="sidebar__foot">
+        <small>{{ t("app.footer") }}</small>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar__title">
+          <h1>{% block page_title %}{% endblock %}</h1>
+          <p class="topbar__hint">{{ t("ui.font_preview_hint") }}</p>
+        </div>
+
+        <form class="prefs" method="post" action="/preferences" autocomplete="off">
+          <label class="prefs__field">
+            <span class="prefs__label">{{ t("ui.language") }}</span>
+            <select name="language" class="prefs__select">
+              {% for opt in language_options %}
+                <option value="{{ opt.code }}" {% if opt.code == language %}selected{% endif %}>
+                  {{ opt.label }}
+                </option>
+              {% endfor %}
+            </select>
+          </label>
+
+          <label class="prefs__field">
+            <span class="prefs__label">{{ t("ui.font_size") }}</span>
+            <select name="font_size" class="prefs__select">
+              {% for n in [12, 13, 14, 15, 16, 18, 20, 22, 24, 28] %}
+                <option value="{{ n }}" {% if n == font_size %}selected{% endif %}>{{ n }}</option>
+              {% endfor %}
+            </select>
+          </label>
+
+          <label class="prefs__field">
+            <span class="prefs__label">{{ t("ui.font_family") }}</span>
+            <select name="font_family" class="prefs__select">
+              {% for opt in font_options %}
+                <option value="{{ opt.name }}" {% if opt.name == font_family %}selected{% endif %}>
+                  {{ opt.name }}
+                </option>
+              {% endfor %}
+            </select>
+          </label>
+
+          <button type="submit" class="prefs__apply">✓</button>
+        </form>
+      </header>
+
+      <div class="font-stage" aria-live="polite">
+        <div class="font-stage__row">
+          <span class="font-stage__size">{{ font_size }}px</span>
+          <span class="font-stage__dot">·</span>
+          <span class="font-stage__family">{{ font_family }}</span>
+        </div>
+        <div class="font-stage__main" id="fontStageMain">機械臂控制系統 · Robotic Arm · 機械臂</div>
+        <div class="font-stage__sub">ABCDEFG abcdefg 0123456789 繁體中文 简体中文</div>
+      </div>
+
+      <section class="content">
+        {% block content %}{% endblock %}
+      </section>
+    </main>
+  </div>
+</body>
+</html>

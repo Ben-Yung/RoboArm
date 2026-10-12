@@ -1,0 +1,297 @@
+/* ============================================================
+   RoboArm · base stylesheet
+   Font + size are driven by CSS variables injected from the
+   <style id="font-vars"> block in base.html:
+     --app-font-size   (e.g. 14px)
+     --app-font-family (a CSS font-family list, e.g. '"DFKai-SB", …')
+   ============================================================ */
+
+:root {
+  --bg: #0f172a;
+  --bg-2: #111c33;
+  --panel: #18233f;
+  --line: #233052;
+  --fg: #e5e7eb;
+  --muted: #94a3b8;
+  --accent: #38bdf8;
+  --accent-2: #818cf8;
+  --danger: #f87171;
+  --radius: 12px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-size: var(--app-font-size);
+  font-family: var(--app-font-family);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a { color: inherit; text-decoration: none; }
+
+.app {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: 100vh;
+}
+
+/* ---------------- Sidebar ---------------- */
+.sidebar {
+  background: linear-gradient(180deg, #0b1224 0%, #0f172a 100%);
+  border-right: 1px solid var(--line);
+  padding: 18px 12px;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.brand {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 8px 16px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 12px;
+}
+.brand__mark {
+  font-size: 28px;
+  line-height: 1;
+}
+.brand__name {
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+.brand__sub {
+  font-size: 0.85em;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.nav { flex: 1; }
+.nav ul { list-style: none; padding: 0; margin: 0; }
+.nav__link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: var(--fg);
+  margin-bottom: 4px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.nav__link:hover { background: rgba(56, 189, 248, 0.08); }
+.nav__link--active {
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.20), rgba(129, 140, 248, 0.18));
+  color: #f0f9ff;
+  font-weight: 600;
+}
+.nav__icon { font-size: 1.1em; width: 20px; text-align: center; }
+
+.sidebar__foot {
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+  text-align: center;
+  color: var(--muted);
+}
+
+/* ---------------- Main / topbar ---------------- */
+.main { display: flex; flex-direction: column; min-width: 0; }
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 24px;
+  background: var(--bg-2);
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  flex-wrap: wrap;
+}
+.topbar__title h1 {
+  font-size: 1.25em;
+  margin: 0;
+  font-weight: 600;
+}
+
+.prefs {
+  display: flex;
+  align-items: end;
+  gap: 10px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+.prefs__field { display: flex; flex-direction: column; gap: 4px; }
+.prefs__label {
+  font-size: 0.78em;
+  color: var(--muted);
+  letter-spacing: 0.4px;
+}
+.prefs__select {
+  background: var(--panel);
+  color: var(--fg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 8px;
+  font: inherit;
+  min-width: 110px;
+}
+.prefs__select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.prefs__apply {
+  background: var(--accent);
+  color: #06121f;
+  border: 0;
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.prefs__apply:hover { background: #7dd3fc; }
+
+/* ---------------- Live font stage ---------------- */
+/* Big, unmistakable preview of the active font + size, driven by
+   the same CSS variables as the rest of the UI. Every dropdown
+   change is reflected here instantly, so you can see the difference. */
+.font-stage {
+  margin: 0 24px 16px;
+  padding: 28px 32px;
+  background: linear-gradient(180deg, #142142 0%, #0e1830 100%);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  text-align: center;
+}
+.font-stage__row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 0.95em;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+.font-stage__size {
+  padding: 2px 10px;
+  background: #1e3a8a;
+  border-radius: 999px;
+  color: #bfdbfe;
+  font-weight: 600;
+}
+.font-stage__family {
+  padding: 2px 10px;
+  background: #4c1d95;
+  border-radius: 999px;
+  color: #ddd6fe;
+  font-weight: 600;
+  font-family: var(--app-font-family);
+}
+.font-stage__main {
+  font-size: calc(var(--app-font-size) * 3.2);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  color: #f1f5f9;
+  font-family: var(--app-font-family);
+  margin-bottom: 12px;
+  word-break: keep-all;
+}
+.font-stage__sub {
+  font-size: calc(var(--app-font-size) * 1.25);
+  color: #94a3b8;
+  font-family: var(--app-font-family);
+  letter-spacing: 0.05em;
+}
+
+/* ---------------- Live font preview ---------------- */
+/* Shows the *current* font family & size in huge text so any change is
+   immediately visible. Uses the same CSS variables as the rest of the UI. */
+.fontPreview {
+  margin: 12px 0 0;
+  padding: 18px 20px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 18px;
+}
+.fontPreview__sample {
+  font-size: calc(var(--app-font-size) * 2.4);
+  line-height: 1.1;
+  font-family: var(--app-font-family);
+  color: var(--accent);
+  letter-spacing: 0.02em;
+}
+.fontPreview__meta {
+  font-size: var(--app-font-size);
+  color: var(--muted);
+  font-family: var(--app-font-family);
+}
+.content {
+  padding: 24px;
+}
+
+/* ---------------- Placeholder card ---------------- */
+.placeholder {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 48px 24px;
+  text-align: center;
+  max-width: 720px;
+  margin: 32px auto;
+}
+.placeholder__icon {
+  font-size: 48px;
+  margin-bottom: 8px;
+}
+.placeholder__title {
+  font-size: 1.4em;
+  font-weight: 700;
+  margin: 0 0 6px;
+  color: #f0f9ff;
+}
+.placeholder__desc {
+  color: var(--muted);
+  margin: 0;
+}
+
+/* ---------------- Responsive ---------------- */
+@media (max-width: 900px) {
+  .app { grid-template-columns: 72px 1fr; }
+  .brand__text, .nav__label, .sidebar__foot { display: none; }
+  .brand { justify-content: center; }
+  .nav__link { justify-content: center; padding: 12px 6px; }
+  .topbar { padding: 12px 14px; }
+  .prefs { width: 100%; margin-left: 0; }
+  .prefs__select { min-width: 88px; }
+}
+
+@media (max-width: 600px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar {
+    position: relative;
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    overflow-x: auto;
+    padding: 8px 8px;
+  }
+  .brand { border: 0; margin: 0; padding: 4px 8px; }
+  .brand__text, .sidebar__foot { display: none; }
+  .nav { flex: 0 0 auto; }
+  .nav ul { display: flex; gap: 6px; }
+  .nav__link { padding: 8px 10px; }
+  .nav__label { display: inline; }
+  .content { padding: 16px; }
+  .topbar__title h1 { font-size: 1.1em; }
+}

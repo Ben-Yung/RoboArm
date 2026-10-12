@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}{{ t("menu.dashboard") }}{% endblock %}
+{% block page_title %}{{ t("menu.dashboard") }} — {{ t("dashboard.subtitle") }}{% endblock %}
+{% block content %}
+  <section class="placeholder">
+    <div class="placeholder__icon" aria-hidden="true">📊</div>
+    <h2 class="placeholder__title">{{ t("placeholder.title") }}</h2>
+    <p class="placeholder__desc">{{ t("placeholder.dashboard.desc") }}</p>
+  </section>
+{% endblock %}
