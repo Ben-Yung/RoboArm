@@ -9,7 +9,7 @@
   <style id="font-vars">
     :root {
       --app-font-size: {{ font_size }}px;
-      --app-font-family: {{ font_family_css }};
+      --app-font-family: {{ font_family_css | safe }};
     }
   </style>
 </head>

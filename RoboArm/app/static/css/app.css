@@ -6,6 +6,25 @@
      --app-font-family (a CSS font-family list, e.g. '"DFKai-SB", …')
    ============================================================ */
 
+/* Webfonts — DFKai-SB / MingLiU are not installed on most client
+   systems, so we ship a free clone (AR PL UKai / AR PL UMing) and
+   expose it under the original face names so the chosen CSS stack
+   actually resolves. */
+@font-face {
+  font-family: "DFKai-SB";
+  src: url("/static/fonts/ARPLUKai.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "MingLiU";
+  src: url("/static/fonts/ARPLUMing.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --bg: #0f172a;
   --bg-2: #111c33;

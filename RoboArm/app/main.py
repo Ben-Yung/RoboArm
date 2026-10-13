@@ -78,12 +78,22 @@ app.mount(
 templates = Jinja2Templates(directory=str(APP_DIR / "templates"))
 
 
+def _decode_cookie(value: str | None) -> str | None:
+    if value is None:
+        return None
+    try:
+        from urllib.parse import unquote
+        return unquote(value)
+    except Exception:
+        return value
+
+
 def _resolve_lang(request: Request) -> str:
     """Language precedence: query ?lang= > cookie > preference > default."""
     qp_lang = request.query_params.get("lang")
     if qp_lang in SUPPORTED_LANGUAGES:
         return qp_lang
-    cookie_lang = request.cookies.get("roboarm_lang")
+    cookie_lang = _decode_cookie(request.cookies.get("roboarm_lang"))
     if cookie_lang in SUPPORTED_LANGUAGES:
         return cookie_lang
     with get_db() as conn:
@@ -163,7 +173,16 @@ def _set_prefs_response(
     font_size: int,
     font_family_name: str,
 ) -> None:
+    from urllib.parse import quote
+
     response.set_cookie("roboarm_lang", language, max_age=60 * 60 * 24 * 365, samesite="lax")
+    response.set_cookie("roboarm_font_size", str(font_size), max_age=60 * 60 * 24 * 365, samesite="lax")
+    response.set_cookie(
+        "roboarm_font_family",
+        quote(font_family_name, safe=""),
+        max_age=60 * 60 * 24 * 365,
+        samesite="lax",
+    )
     with get_db() as conn:
         preferences_repo.update(
             conn,
@@ -205,9 +224,9 @@ def update_preferences(
     # Each dropdown uses auto-submit on change, so the form may arrive with
     # only one field set. Read the others from existing cookies and only
     # overwrite what was actually submitted.
-    current_lang = request.cookies.get("lang", DEFAULT_LANGUAGE)
-    current_size = int(request.cookies.get("font_size", str(DEFAULT_FONT_SIZE)))
-    current_family = request.cookies.get("font_family", DEFAULT_FONT_FAMILY)
+    current_lang = request.cookies.get("roboarm_lang", DEFAULT_LANGUAGE)
+    current_size = int(_decode_cookie(request.cookies.get("roboarm_font_size", str(DEFAULT_FONT_SIZE))))
+    current_family = _decode_cookie(request.cookies.get("roboarm_font_family", DEFAULT_FONT_FAMILY))
 
     if language is None:
         language = current_lang
