@@ -33,7 +33,7 @@ from app.i18n import build_translator
 # Sidebar menu items (single source of truth for routes + i18n keys).
 MENU: list[dict[str, str]] = [
     {"key": "dashboard", "url": "/dashboard", "icon": "📊"},
-    {"key": "source", "url": "/source", "icon": "🗂️"},
+    {"key": "source", "url": "/system/table", "icon": "🗂️"},
     {"key": "setting", "url": "/setting", "icon": "⚙️"},
 ]
 
@@ -212,6 +212,148 @@ def source(request: Request) -> HTMLResponse:
 @app.get("/setting", response_class=HTMLResponse)
 def setting(request: Request) -> HTMLResponse:
     return _render(request, "setting.html", page_key="setting")
+
+# --- Phase II: Generic table editor ---
+
+def _all_tables() -> list[dict[str, str]]:
+    """List all user-defined SQLite tables with their type."""
+    with connect() as conn:
+        rows = conn.execute(
+            "SELECT name FROM sqlite_master "
+            "WHERE type='table' AND name NOT LIKE 'sqlite_%' "
+            "ORDER BY name"
+        ).fetchall()
+    return [{"name": r["name"]} for r in rows]
+
+
+def _table_columns(conn, table_name: str) -> list[dict[str, Any]]:
+    """Return ordered list of column metadata: name, type, pk, notnull, dflt."""
+    rows = conn.execute(f'PRAGMA table_info("{table_name}")').fetchall()
+    return [
+        {
+            "name": r["name"],
+            "type": (r["type"] or ""),
+            "pk": bool(r["pk"]),
+            "notnull": bool(r["notnull"]),
+            "dflt": r["dflt"],
+        }
+        for r in rows
+    ]
+
+
+def _primary_key(cols: list[dict[str, Any]]) -> str | None:
+    pks = [c["name"] for c in cols if c["pk"]]
+    return pks[0] if pks else None
+
+
+def _row_to_dict(cols: list[dict[str, Any]], row: Any) -> dict[str, Any]:
+    return {c["name"]: row[c["name"]] for c in cols}
+
+
+@app.get("/system/table", response_class=HTMLResponse)
+def table_list(request: Request) -> HTMLResponse:
+    tables = _all_tables()
+    return _render(
+        request,
+        "table_list.html",
+        page_key="system",
+        extra={"tables": tables},
+    )
+
+
+@app.get("/system/table/{table_name}", response_class=HTMLResponse)
+def table_edit(request: Request, table_name: str) -> HTMLResponse:
+    valid = {t["name"] for t in _all_tables()}
+    if table_name not in valid:
+        return _render(
+            request,
+            "table_list.html",
+            page_key="system",
+            extra={"tables": list(valid), "error_table": table_name},
+            status_code=404,
+        )
+    with connect() as conn:
+        cols = _table_columns(conn, table_name)
+        rows = conn.execute(f'SELECT * FROM "{table_name}" ORDER BY rowid').fetchall()
+    records = [_row_to_dict(cols, r) for r in rows]
+    return _render(
+        request,
+        "table_edit.html",
+        page_key="system",
+        extra={
+            "table_name": table_name,
+            "columns": cols,
+            "records": records,
+            "primary_key": _primary_key(cols),
+        },
+    )
+
+
+@app.post("/system/table/{table_name}/save", response_class=HTMLResponse)
+def table_save(
+    request: Request,
+    table_name: str,
+    payload: str = Form(""),
+) -> Response:
+    """Generic save endpoint.
+
+    Reads the JSON-encoded ``payload`` form field, which contains:
+        {
+          "inserted": [ {col: value, ...}, ... ],   # rows to add
+          "updated":  [ {pk: value, col: value, ...}, ... ],  # rows to update
+          "deleted":  [pk_value, ...]               # rows to delete
+        }
+    """
+    valid = {t["name"] for t in _all_tables()}
+    if table_name not in valid:
+        return RedirectResponse(url="/system/table", status_code=303)
+
+    import json as _json
+
+    try:
+        data = _json.loads(payload) if payload else {"inserted": [], "updated": [], "deleted": []}
+    except _json.JSONDecodeError:
+        return RedirectResponse(url=f"/system/table/{table_name}", status_code=303)
+
+    with connect() as conn:
+        cols = _table_columns(conn, table_name)
+        pk = _primary_key(cols)
+        if not pk:
+            return RedirectResponse(url=f"/system/table/{table_name}", status_code=303)
+        col_names = [c["name"] for c in cols]
+
+        # Insert
+        for rec in data.get("inserted", []):
+            values = [rec.get(c, None) for c in col_names]
+            placeholders = ", ".join(["?"] * len(col_names))
+            quoted_cols = ", ".join(f'"{c}"' for c in col_names)
+            conn.execute(
+                f'INSERT INTO "{table_name}" ({quoted_cols}) VALUES ({placeholders})',
+                values,
+            )
+
+        # Update
+        for rec in data.get("updated", []):
+            if pk not in rec:
+                continue
+            updates = {c: rec.get(c, None) for c in col_names if c != pk}
+            set_clause = ", ".join(f'"{c}" = ?' for c in updates)
+            params = list(updates.values()) + [rec[pk]]
+            conn.execute(
+                f'UPDATE "{table_name}" SET {set_clause} WHERE "{pk}" = ?',
+                params,
+            )
+
+        # Delete
+        for pk_val in data.get("deleted", []):
+            conn.execute(
+                f'DELETE FROM "{table_name}" WHERE "{pk}" = ?',
+                [pk_val],
+            )
+
+        conn.commit()
+
+    return RedirectResponse(url=f"/system/table/{table_name}", status_code=303)
 
 
 @app.post("/preferences")

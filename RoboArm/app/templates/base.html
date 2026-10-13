@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#0f172a" />
-  <title>{% block title %}{{ t("app.title") }}{% endblock %}</title>
+  <title>{% block title %}{{ t("app.brand") }} {{ t("menu." ~ page_key) }}{% endblock %}</title>
   <link rel="stylesheet" href="/static/css/app.css" />
   <style id="font-vars">
     :root {
@@ -30,6 +30,8 @@
             <li>
               <a href="{{ item.url }}"
                  class="nav__link {% if page_key == item.key %}nav__link--active{% endif %}"
+                 target="{{ item.key }}_win"
+                 onclick="return openOrFocusMenu(this, '{{ item.key | e }}', '{{ item.url | e }}', '{{ (t('app.title') ~ ' - ' ~ t('menu.' ~ item.key)) | e }}');"
                  {% if page_key == item.key %}aria-current="page"{% endif %}>
                 <span class="nav__icon" aria-hidden="true">{{ item.icon }}</span>
                 <span class="nav__label">{{ t("menu." ~ item.key) }}</span>
@@ -102,5 +104,18 @@
       </section>
     </main>
   </div>
+<script>
+  // 菜單開窗邏輯：以 menu key 作為瀏覽器層級的 window name。
+  // 同名視窗只會存在一個：已開啟 → 導向 url（即 refresh）並 focus；未開啟 → 開新窗。
+  function openOrFocusMenu(el, key, url, title) {
+    try {
+      var w = window.open(url, 'roboarm_' + key);
+      if (w) { try { w.focus(); } catch (e) {} }
+      return false;
+    } catch (err) {
+      return true;
+    }
+  }
+</script>
 </body>
 </html>
